@@ -3,10 +3,11 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use App\Models\Product;
+use App\Models\Category;
 
 class ManageProducts extends Command
 {
-   
     // The name and signature of the console command.
     protected $signature = 'product:manage';
 
@@ -21,13 +22,27 @@ class ManageProducts extends Command
 
         // Handle product creation
         if ($action == 'create') {
+
+            // Get all categories
+            $categories = Category::all();
+
+            // Check if categories exist
+            if ($categories->isEmpty()) {
+                $this->error('No categories available. Please create categories first.');
+                return;
+            }
+
+            // Create the product
             $name = $this->ask('Enter the product name');
             $description = $this->ask('Enter the product description');
             $price = $this->ask('Enter the product price');
             $image = $this->ask('Enter the product image path (optional)', null);
-            $categories = $this->ask('Enter category IDs (comma-separated)');
 
-            // Create product and associate it with categories
+            // Display categories and get the user's choice
+            $categoryOptions = $categories->pluck('name', 'id')->toArray();
+            $categoryId = $this->choice('Select a category for the product', array_keys($categoryOptions), 0);
+
+            // Create product and associate it with the selected category
             $product = Product::create([
                 'name' => $name,
                 'description' => $description,
@@ -35,7 +50,8 @@ class ManageProducts extends Command
                 'image' => $image,
             ]);
 
-            $product->categories()->sync(explode(',', $categories));
+            // Sync the product with the selected category
+            $product->categories()->sync([$categoryId]);
 
             $this->info('Product created successfully.');
         }
