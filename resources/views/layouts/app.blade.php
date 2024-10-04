@@ -3,27 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'My Application')</title>
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <title>@yield('title')</title>
+    <link href="{{ mix('css/app.css') }}" rel="stylesheet">
 </head>
-<body>
-
-    <nav>
-        <a href="{{ route('categories.index') }}">Categories</a> |
-        <a href="{{ route('products.index') }}">Products</a>
-    </nav>
-
-    <div class="container">
-        @include('partials._messages') <!-- Include success/error messages -->
-        @include('partials._errors') <!-- Include error display -->
-        
-        @yield('content') <!-- Dynamic content goes here -->
+<body class="bg-gray-100">
+    <div class="container mx-auto py-5">
+        @include('partials.navbar')  {{-- Include your navigation here --}}
+        @yield('content')
     </div>
-
-    <footer>
-        <p>&copy; {{ date('Y') }} My Application</p>
-    </footer>
-
-    <script src="{{ asset('js/app.js') }}"></script>
+    <script src="{{ mix('js/app.js') }}"></script>
 </body>
 </html>

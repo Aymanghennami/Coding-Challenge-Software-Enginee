@@ -2,91 +2,115 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\ProductService;
-use App\Services\CategoryService;
+use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    protected $productService;
-    protected $categoryService;
-
-    public function __construct(ProductService $productService, CategoryService $categoryService)
-    {
-        $this->productService = $productService;
-        $this->categoryService = $categoryService;
-    }
-
-    // Index page (read)
+    // Display a listing of the products with sorting and filtering
     public function index(Request $request)
     {
-        $sort = $request->get('sort', 'name');
-        $categoryId = $request->get('category_id');
+        // Get all categories for the filter dropdown
+        $categories = Category::all();
 
-        $products = $this->productService->getPaginatedProducts(10, $sort, $categoryId);
-        $categories = $this->categoryService->getAllCategories();
+        // Get the query parameters for filtering and sorting
+        $categoryId = $request->query('category');
+        $sortBy = $request->query('sort', 'name'); // default sort by name
+        $sortOrder = $request->query('order', 'asc'); // default order ascending
 
-        return view('products.index', compact('products', 'categories', 'sort'));
+        // Build the query for products
+        $query = Product::with('categories');
+
+        // Apply filtering by category if a category ID is provided
+        if ($categoryId) {
+            $query->whereHas('categories', function ($q) use ($categoryId) {
+                $q->where('categories.id', $categoryId);
+            });
+        }
+
+        // Apply sorting
+        if ($sortBy && in_array($sortBy, ['name', 'price'])) {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+
+        // Fetch the products with pagination
+        $products = $query->paginate(10);
+
+        return view('products.index', compact('products', 'categories', 'categoryId', 'sortBy', 'sortOrder'));
     }
 
-    // Show create form (create)
+    // Show the form for creating a new product
     public function create()
     {
-        $categories = $this->categoryService->getAllCategories();
+        // Fetch all categories for the select dropdown
+        $categories = Category::all();
+
         return view('products.create', compact('categories'));
     }
 
-    // Store new product (create)
+    // Store a newly created product in storage
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        // Validate the incoming request data
+        $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'required|string',
+            'description' => 'nullable|string',
             'price' => 'required|numeric',
             'image' => 'nullable|string',
-            'category_id' => 'required|exists:categories,id',
+            'categories' => 'array',
+            'categories.*' => 'exists:categories,id',
         ]);
 
-        $this->productService->createProduct($validated, $request->category_id);
+        // Create a new product instance and save it
+        $product = Product::create($request->only('name', 'description', 'price', 'image'));
+
+        // Sync the product with categories
+        if ($request->has('categories')) {
+            $product->categories()->sync($request->categories);
+        }
 
         return redirect()->route('products.index')->with('success', 'Product created successfully.');
     }
 
-    // Show edit form (update)
-    public function edit($id)
+    // Show the form for editing the specified product
+    public function edit(Product $product)
     {
-        $product = $this->productService->getProductById($id);
-        $categories = $this->categoryService->getAllCategories();
+        $categories = Category::all();
+        $selectedCategories = $product->categories->pluck('id')->toArray();
 
-        if (!$product) {
-            return redirect()->route('products.index')->with('error', 'Product not found.');
-        }
-
-        return view('products.edit', compact('product', 'categories'));
+        return view('products.edit', compact('product', 'categories', 'selectedCategories'));
     }
 
-    // Update product (update)
-    public function update(Request $request, $id)
+    // Update the specified product in storage
+    public function update(Request $request, Product $product)
     {
-        $validated = $request->validate([
+        // Validate the incoming request data
+        $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'required|string',
+            'description' => 'nullable|string',
             'price' => 'required|numeric',
             'image' => 'nullable|string',
-            'category_id' => 'required|exists:categories,id',
+            'categories' => 'array',
+            'categories.*' => 'exists:categories,id',
         ]);
 
-        $this->productService->updateProduct($id, $validated, $request->category_id);
+        // Update product details
+        $product->update($request->only('name', 'description', 'price', 'image'));
+
+        // Sync the product with categories
+        if ($request->has('categories')) {
+            $product->categories()->sync($request->categories);
+        }
 
         return redirect()->route('products.index')->with('success', 'Product updated successfully.');
     }
 
-    // Delete product (delete)
-    public function destroy($id)
+    // Remove the specified product from storage
+    public function destroy(Product $product)
     {
-        $this->productService->deleteProduct($id);
+        $product->delete();
 
         return redirect()->route('products.index')->with('success', 'Product deleted successfully.');
     }
 }
-
