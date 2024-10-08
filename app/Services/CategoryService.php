@@ -2,44 +2,47 @@
 
 namespace App\Services;
 
+use App\Repositories\CategoryRepository;
 use App\Models\Category;
 
 class CategoryService
 {
-    public function createCategory(array $data)
+    protected $categoryRepository;
+
+    // Inject CategoryRepository via constructor
+    public function __construct(CategoryRepository $categoryRepository)
     {
-        return Category::create($data);
+        $this->categoryRepository = $categoryRepository;
     }
 
-    public function updateCategory(int $id, array $data)
+    // Return type added: Category
+    public function createCategory(array $data): Category
     {
-        $category = Category::find($id);
-        if ($category) {
-            $category->update($data);
-        }
-        return $category;
+        return $this->categoryRepository->create($data);
     }
 
-    public function deleteCategory(int $id)
+    public function updateCategory(int $id, array $data): ?Category
     {
-        $category = Category::find($id);
-        if ($category) {
-            $category->delete();
-        }
+        return $this->categoryRepository->update($id, $data);
     }
 
-    public function getCategoryById(int $id)
+    public function deleteCategory(int $id): bool
     {
-        return Category::find($id);
+        return $this->categoryRepository->delete($id);
+    }
+
+    public function getCategoryById(int $id): ?Category
+    {
+        return $this->categoryRepository->findById($id);
     }
 
     public function getAllCategories()
     {
-        return Category::all();
+        return $this->categoryRepository->getAll();
     }
 
     public function getPaginatedCategories($perPage = 10)
     {
-        return Category::paginate($perPage);
+        return $this->categoryRepository->paginate($perPage);
     }
 }

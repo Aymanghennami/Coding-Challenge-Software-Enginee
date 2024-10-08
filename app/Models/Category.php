@@ -6,8 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
+
 {
-    protected $fillable = ['name', 'parent_id'];
+    use HasFactory;
+
+
+    protected $guarded = ['id','created_at', 'updated_at' ];
 
     public function products()
     {
@@ -23,5 +27,17 @@ class Category extends Model
     {
         return $this->hasMany(Category::class, 'parent_id');
     }
-    use HasFactory;
+    // Getters
+    public function getId():int {
+        return $this->attributes['id'];
+    }
+    public function getName(): string
+    {
+        return $this->attributes['name'];
+    }
+
+    public function getParentId(): ?int
+    {
+        return $this->attributes['parent_id'];
+    }
 }

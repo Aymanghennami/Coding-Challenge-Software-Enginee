@@ -10,8 +10,8 @@
             <select name="category" onchange="this.form.submit()">
                 <option value="">All Categories</option>
                 @foreach ($categories as $category)
-                    <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
-                        {{ $category->name }}
+                    <option value="{{ $category->getId() }}" {{ request('category') == $category->getId() ? 'selected' : '' }}>
+                        {{ $category->getName() }}
                     </option>
                 @endforeach
             </select>
@@ -41,13 +41,13 @@
         <tbody>
             @foreach ($products as $product)
                 <tr>
-                    <td><a href="{{ route('products.show', $product->id) }}">{{ $product->name }}</a></td>
-                    <td>{{ $product->description }}</td>
-                    <td>${{ number_format($product->price, 2) }}</td>
+                    <td><a href="{{ route('products.show', $product->getId()) }}">{{ $product->getName() }}</a></td>
+                    <td>{{ $product->getDescription() }}</td>
+                    <td>${{ number_format($product->getPrice(), 2) }}</td>
                     <td>{{ $product->categories->pluck('name')->implode(', ') }}</td>
                     <td>
-                        <a href="{{ route('products.edit', $product->id) }}" class="btn btn-primary">Edit</a>
-                        <form action="{{ route('products.destroy', $product->id) }}" method="POST" style="display:inline;">
+                        <a href="{{ route('products.edit', $product->getId()) }}" class="btn btn-primary">Edit</a>
+                        <form action="{{ route('products.destroy', $product->getId()) }}" method="POST" style="display:inline;">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-danger">Delete</button>

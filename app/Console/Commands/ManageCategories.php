@@ -3,46 +3,40 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Models\Category; // Import the Category model
+use App\Services\CategoryService;
 
 class ManageCategories extends Command
 {
-    // The name and signature of the console command.
     protected $signature = 'category:manage';
-
-    // The console command description.
     protected $description = 'Create and delete categories';
+    protected $categoryService;
 
-    // Execute the console command.
+    public function __construct(CategoryService $categoryService)
+    {
+        parent::__construct();
+        $this->categoryService = $categoryService;
+    }
+
     public function handle()
     {
-        // Ask user if they want to create or delete a category
         $action = $this->choice('What would you like to do?', ['create', 'delete'], 0);
 
-        // Handle category creation
-        if ($action === 'create') {
+        if ($action == 'create') {
             $name = $this->ask('Enter the category name');
             $parentId = $this->ask('Enter parent category ID (optional, leave blank if none)', null);
 
-            // Create the category
-            Category::create([
+            // Here, we pass an associative array with 'name' and 'parent_id' keys to the service
+            $this->categoryService->createCategory([
                 'name' => $name,
-                'parent_id' => $parentId ? (int)$parentId : null,
+                'parent_id' => $parentId ? (int)$parentId : null
             ]);
 
             $this->info('Category created successfully.');
-        }
-        // Handle category deletion
-        elseif ($action === 'delete') {
+        } elseif ($action == 'delete') {
             $id = $this->ask('Enter the ID of the category to delete');
-            $category = Category::find($id);
+            $this->categoryService->deleteCategory($id);
 
-            if ($category) {
-                $category->delete();
-                $this->info('Category deleted successfully.');
-            } else {
-                $this->error('Category not found.');
-            }
+            $this->info('Category deleted successfully.');
         }
     }
 }
