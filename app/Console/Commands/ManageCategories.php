@@ -21,22 +21,26 @@ class ManageCategories extends Command
     {
         $action = $this->choice('What would you like to do?', ['create', 'delete'], 0);
 
-        if ($action == 'create') {
+        if ($action === 'create') {
             $name = $this->ask('Enter the category name');
             $parentId = $this->ask('Enter parent category ID (optional, leave blank if none)', null);
 
-            // Here, we pass an associative array with 'name' and 'parent_id' keys to the service
+            // Pass an associative array with 'name' and 'parent_id' keys to the service
             $this->categoryService->createCategory([
                 'name' => $name,
                 'parent_id' => $parentId ? (int)$parentId : null
             ]);
 
             $this->info('Category created successfully.');
-        } elseif ($action == 'delete') {
+            return; // Early return after creating a category
+        }
+
+        if ($action === 'delete') {
             $id = $this->ask('Enter the ID of the category to delete');
             $this->categoryService->deleteCategory($id);
 
             $this->info('Category deleted successfully.');
+            return; // Early return after deleting a category
         }
     }
 }

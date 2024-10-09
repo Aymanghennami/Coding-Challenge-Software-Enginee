@@ -6,54 +6,85 @@ use App\Models\Product;
 
 class ProductRepository
 {
+    /**
+     * Create a new product
+     * @param array $data
+     * @return Product
+     */
     public function create(array $data): Product
     {
         return Product::create($data);
     }
 
+    /**
+     * Update a product by ID
+     * @param int $id
+     * @param array $data
+     * @return Product|null
+     */
     public function update(int $id, array $data): ?Product
     {
-        $product = Product::find($id);
+        $product = $this->findById($id);
+        
         if ($product) {
             $product->update($data);
         }
+
         return $product;
     }
 
+    /**
+     * Delete a product by ID
+     * @param int $id
+     * @return bool
+     */
     public function delete(int $id): bool
     {
-        $product = Product::find($id);
+        $product = $this->findById($id);
+
         if ($product) {
-            $product->delete();
-            return true;
+            return $product->delete();
         }
+
         return false;
     }
 
+    /**
+     * Find a product by its ID
+     * @param int $id
+     * @return Product|null
+     */
     public function findById(int $id): ?Product
     {
         return Product::find($id);
     }
 
-    public function getAll(): \Illuminate\Database\Eloquent\Collection
+    /**
+     * Get all products
+     * @return \Illuminate\Database\Eloquent\Collection|Product[]
+     */
+    public function getAll()
     {
         return Product::all();
     }
 
-    public function paginate(int $perPage = 10): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    /**
+     * Get paginated products
+     * @param int $perPage
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function paginate(int $perPage = 10)
     {
         return Product::paginate($perPage);
     }
 
-    public function filterByCategory(int $categoryId)
+    /**
+     * Sync categories for a product
+     * @param Product $product
+     * @param array $categoryIds
+     */
+    public function syncCategories(Product $product, array $categoryIds): void
     {
-        return Product::whereHas('categories', function($query) use ($categoryId) {
-            $query->where('categories.id', $categoryId);
-        })->get();
-    }
-
-    public function sortBy($field, $order = 'asc')
-    {
-        return Product::orderBy($field, $order)->get();
+        $product->categories()->sync($categoryIds);
     }
 }

@@ -25,8 +25,7 @@ class ManageProducts extends Command
         // Ask user if they want to create or delete a product
         $action = $this->choice('What would you like to do?', ['create', 'delete'], 0);
 
-        // Handle product creation
-        if ($action == 'create') {
+        if ($action === 'create') {
             // Get all categories
             $categories = Category::all();
 
@@ -55,8 +54,9 @@ class ManageProducts extends Command
             ], $categoryId);
 
             $this->info('Product created successfully.');
+            return; // Early return after product creation
 
-        } elseif ($action == 'delete') {
+        } elseif ($action === 'delete') {
             // Handle product deletion
             $id = $this->ask('Enter the ID of the product to delete');
 
@@ -65,6 +65,8 @@ class ManageProducts extends Command
             } else {
                 $this->error('Product not found.');
             }
+
+            return; // Early return after product deletion
         }
     }
 }
